@@ -1,0 +1,25 @@
+#+title: ob-gleam Deps Examples
+#+author: takeokunn
+
+* Setup
+
+#+begin_src emacs-lisp :results silent
+(add-to-list 'load-path (expand-file-name ".."))
+(require 'ob-gleam)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gleam . t)))
+#+end_src
+
+* Using :deps
+
+The =:deps= header argument installs Hex packages via =gleam add=.
+
+*Note*: These examples require network access to download packages from Hex.
+
+** Using gleam_json
+
+#+begin_src gleam :deps gleam_json :imports gleam/json
+  let obj = json.object([#("message", json.string("Hello, Gleam!"))])
+  io.println(json.to_string(obj))
+#+end_src

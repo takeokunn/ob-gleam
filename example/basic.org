@@ -1,0 +1,28 @@
+#+title: ob-gleam Basic Examples
+#+author: takeokunn
+
+* Setup
+
+Before running examples, load ob-gleam:
+
+#+begin_src emacs-lisp :results silent
+(add-to-list 'load-path (expand-file-name ".."))
+(require 'ob-gleam)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gleam . t)))
+#+end_src
+
+* Hello World
+
+Simple expression auto-wrapped in =pub fn main()= with =import gleam/io=:
+
+#+begin_src gleam
+  io.println("Hello, world!")
+#+end_src
+
+* Arithmetic
+
+#+begin_src gleam :imports gleam/int
+  io.println(int.to_string(1 + 2))
+#+end_src

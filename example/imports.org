@@ -1,0 +1,31 @@
+#+title: ob-gleam Imports Examples
+#+author: takeokunn
+
+* Setup
+
+#+begin_src emacs-lisp :results silent
+(add-to-list 'load-path (expand-file-name ".."))
+(require 'ob-gleam)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gleam . t)))
+#+end_src
+
+* Using :imports
+
+The =:imports= header argument adds extra import statements.
+=import gleam/io= is always included automatically.
+
+** String Operations
+
+#+begin_src gleam :imports gleam/string
+  io.println(string.uppercase("hello gleam"))
+#+end_src
+
+** Multiple Imports
+
+#+begin_src gleam :imports gleam/string gleam/int
+  let num = int.to_string(42)
+  let msg = string.concat(["The answer is ", num])
+  io.println(msg)
+#+end_src

@@ -1,0 +1,40 @@
+#+title: ob-gleam Full Module Examples
+#+author: takeokunn
+
+* Setup
+
+#+begin_src emacs-lisp :results silent
+(add-to-list 'load-path (expand-file-name ".."))
+(require 'ob-gleam)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gleam . t)))
+#+end_src
+
+* Full Module
+
+When code contains =pub fn main()=, it is used as-is without auto-wrapping:
+
+#+begin_src gleam
+import gleam/io
+
+pub fn main() {
+  io.println("Hello from full module!")
+}
+#+end_src
+
+* Multiple Functions
+
+#+begin_src gleam
+import gleam/io
+import gleam/int
+
+fn add(a: Int, b: Int) -> Int {
+  a + b
+}
+
+pub fn main() {
+  let result = add(3, 4)
+  io.println("3 + 4 = " <> int.to_string(result))
+}
+#+end_src
