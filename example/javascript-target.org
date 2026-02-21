@@ -1,0 +1,38 @@
+#+title: ob-gleam JavaScript Target Examples
+#+author: takeokunn
+
+* Setup
+
+Before running examples, load ob-gleam:
+
+#+begin_src emacs-lisp :results silent
+(add-to-list 'load-path (expand-file-name ".."))
+(require 'ob-gleam)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gleam . t)))
+#+end_src
+
+* JavaScript Target
+
+Use =:target javascript= to compile and run Gleam code on Node.js.
+
+*Note*: These examples require Node.js to be installed and available on =PATH=.
+
+** Hello World (JS)
+
+#+begin_src gleam :target javascript
+  io.println("Hello from JavaScript!")
+#+end_src
+
+#+RESULTS:
+: Hello from JavaScript!
+
+** With Imports (JS)
+
+#+begin_src gleam :target javascript :imports gleam/string
+  io.println(string.uppercase("hello gleam on js"))
+#+end_src
+
+#+RESULTS:
+: HELLO GLEAM ON JS
