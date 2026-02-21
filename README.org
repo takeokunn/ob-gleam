@@ -1,0 +1,72 @@
+#+title: ob-gleam
+
+[[https://melpa.org/#/ob-gleam][file:https://melpa.org/packages/ob-gleam-badge.svg]]
+[[https://github.com/takeokunn/ob-gleam/actions/workflows/ci.yml][file:https://github.com/takeokunn/ob-gleam/actions/workflows/ci.yml/badge.svg]]
+
+Org Babel support for evaluating Gleam code blocks.
+
+* Prerequisites
+
+- Emacs 29.1+
+- [[https://gleam.run/][Gleam]] CLI (must be installed and available on =PATH=)
+
+* Installation
+
+** MELPA
+
+#+begin_src emacs-lisp
+(use-package ob-gleam)
+#+end_src
+
+Or =M-x package-install RET ob-gleam RET=.
+
+** Manual
+
+Clone this repository and add it to your =load-path=:
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "/path/to/ob-gleam")
+(require 'ob-gleam)
+#+end_src
+
+** Enable the language
+
+Add =gleam= to =org-babel-load-languages=:
+
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((gleam . t)))
+#+end_src
+
+* Usage
+
+See the [[file:example/][example/]] directory for working Org files demonstrating each feature.
+
+* Supported header arguments
+
+| Argument   | Description                                     | Default  |
+|------------+-------------------------------------------------+----------|
+| =:results= | Result type (=output=, =silent=)                | =output= |
+| =:deps=    | Space-separated Hex package names to install     |          |
+| =:imports= | Space-separated module paths to auto-import      |          |
+
+* Customization
+
+- =ob-gleam-command= -- Path to the Gleam executable (default: ="gleam"=)
+- =ob-gleam-auto-main= -- Automatically wrap code in =pub fn main()= when not present (default: =t=)
+- =ob-gleam-project-name= -- Project name for the temporary gleam.toml (default: ="ob_gleam_temp"=)
+
+* Development
+
+#+begin_src shell
+make compile       # Byte-compile ob-gleam.el
+make test          # Run ERT tests
+make lint          # Run checkdoc
+make package-lint  # Run package-lint
+nix flake check    # Run all checks via Nix
+#+end_src
+
+* License
+
+GPL-3.0. See [[file:LICENSE][LICENSE]].
