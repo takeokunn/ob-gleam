@@ -95,7 +95,7 @@
 
 (ert-deftest ob-gleam-test-generate-toml ()
   "Generated TOML contains project name, version, and stdlib dependency."
-  (let ((toml (ob-gleam--generate-gleam-toml "my_project")))
+  (let ((toml (ob-gleam--generate-gleam-toml "my_project" nil)))
     (should (string-match-p "name = \"my_project\"" toml))
     (should (string-match-p "version = \"1\\.0\\.0\"" toml))
     (should (string-match-p "\\[dependencies\\]" toml))
@@ -108,7 +108,7 @@
   (let ((tmp-dir (make-temp-file "ob-gleam-test-" t)))
     (unwind-protect
         (progn
-          (ob-gleam--create-project tmp-dir "test_project")
+          (ob-gleam--create-project tmp-dir "test_project" nil)
           (should (file-exists-p (expand-file-name "gleam.toml" tmp-dir)))
           (should (file-directory-p (expand-file-name "src" tmp-dir)))
           (let ((toml-content
@@ -180,7 +180,7 @@
     (cl-letf (((symbol-function 'org-babel-eval)
                (lambda (_cmd _body) (error "Gleam failed")))
               ((symbol-function 'ob-gleam--create-project)
-               (lambda (dir _name)
+               (lambda (dir _name _target)
                  (setq captured-dir dir)
                  (make-directory (expand-file-name "src" dir) t)))
               ((symbol-function 'ob-gleam--write-source)
@@ -232,6 +232,93 @@
   (let ((ob-gleam-auto-main nil)
         (body "fn helper() { 42 }"))
     (should (equal (org-babel-expand-body:gleam body '()) body))))
+
+;;; ob-gleam--validate-target
+
+(ert-deftest ob-gleam-test-validate-target-nil ()
+  "Nil target returns nil (default Erlang)."
+  (should-not (ob-gleam--validate-target nil)))
+
+(ert-deftest ob-gleam-test-validate-target-erlang ()
+  "Erlang target returns nil."
+  (should-not (ob-gleam--validate-target "erlang")))
+
+(ert-deftest ob-gleam-test-validate-target-javascript ()
+  "JavaScript target returns \"javascript\"."
+  (should (equal (ob-gleam--validate-target "javascript") "javascript")))
+
+(ert-deftest ob-gleam-test-validate-target-case-insensitive ()
+  "Target validation is case-insensitive."
+  (should (equal (ob-gleam--validate-target "JavaScript") "javascript"))
+  (should-not (ob-gleam--validate-target "Erlang")))
+
+(ert-deftest ob-gleam-test-validate-target-invalid ()
+  "Invalid target signals user-error."
+  (should-error (ob-gleam--validate-target "python")
+                :type 'user-error))
+
+(ert-deftest ob-gleam-test-validate-target-empty ()
+  "Empty string target returns nil."
+  (should-not (ob-gleam--validate-target "")))
+
+;;; ob-gleam--generate-gleam-toml (target variants)
+
+(ert-deftest ob-gleam-test-generate-toml-javascript ()
+  "Generated TOML for JavaScript target includes target and runtime."
+  (let ((toml (ob-gleam--generate-gleam-toml "my_project" "javascript")))
+    (should (string-match-p "name = \"my_project\"" toml))
+    (should (string-match-p "target = \"javascript\"" toml))
+    (should (string-match-p "\\[javascript\\]" toml))
+    (should (string-match-p "runtime = \"node\"" toml))
+    (should (string-match-p "gleam_stdlib" toml))))
+
+(ert-deftest ob-gleam-test-generate-toml-erlang-explicit ()
+  "Generated TOML for explicit erlang target matches default (no target line)."
+  (let ((toml-nil (ob-gleam--generate-gleam-toml "my_project" nil))
+        (toml-erlang (ob-gleam--generate-gleam-toml "my_project" "erlang")))
+    (should (equal toml-nil toml-erlang))
+    (should-not (string-match-p "target = " toml-nil))
+    (should-not (string-match-p "\\[javascript\\]" toml-nil))))
+
+;;; ob-gleam--create-project (target variants)
+
+(ert-deftest ob-gleam-test-create-project-javascript ()
+  "Creating a project with JavaScript target produces correct gleam.toml."
+  (let ((tmp-dir (make-temp-file "ob-gleam-test-" t)))
+    (unwind-protect
+        (progn
+          (ob-gleam--create-project tmp-dir "test_project" "javascript")
+          (let ((toml-content
+                 (with-temp-buffer
+                   (insert-file-contents (expand-file-name "gleam.toml" tmp-dir))
+                   (buffer-string))))
+            (should (string-match-p "target = \"javascript\"" toml-content))
+            (should (string-match-p "runtime = \"node\"" toml-content))))
+      (delete-directory tmp-dir t))))
+
+;;; org-babel-execute:gleam (target variants)
+
+(ert-deftest ob-gleam-test-execute-with-target ()
+  "Execute with :target javascript creates correct project."
+  (let ((created-target nil))
+    (cl-letf (((symbol-function 'org-babel-eval)
+               (lambda (_cmd _body) "Hello from JS!\n"))
+              ((symbol-function 'ob-gleam--create-project)
+               (lambda (_dir _name target) (setq created-target target)))
+              ((symbol-function 'ob-gleam--write-source)
+               (lambda (_dir _name _code) nil)))
+      (org-babel-execute:gleam
+       "  io.println(\"Hello from JS!\")"
+       '((:target . "javascript")))
+      (should (equal created-target "javascript")))))
+
+;;; org-babel-expand-body:gleam (target invariance)
+
+(ert-deftest ob-gleam-test-expand-body-ignores-target ()
+  "Expand body produces same result regardless of :target parameter."
+  (let ((body "  io.println(\"hi\")"))
+    (should (equal (org-babel-expand-body:gleam body '())
+                   (org-babel-expand-body:gleam body '((:target . "javascript")))))))
 
 (provide 'ob-gleam-test)
 ;;; ob-gleam-test.el ends here

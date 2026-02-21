@@ -18,6 +18,7 @@
             pkgs.gleam
             pkgs.erlang
             pkgs.rebar3
+            pkgs.nodejs
           ];
 
           shellHook = ''
@@ -37,6 +38,7 @@
             echo "  emacs -Q -L . example/full-module.org   Full module with pub fn main()"
             echo "  emacs -Q -L . example/imports.org       Using :imports header"
             echo "  emacs -Q -L . example/deps.org          Using :deps header (needs network)"
+            echo "  emacs -Q -L . example/javascript-target.org  Using :target javascript (needs Node.js)"
           '';
         };
       });

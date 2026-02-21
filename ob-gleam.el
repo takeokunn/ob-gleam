@@ -35,6 +35,7 @@
 ;;   :results - output (default), silent
 ;;   :deps    - space-separated Hex package names
 ;;   :imports - space-separated module paths for auto-import
+;;   :target  - compilation target (erlang, javascript); default erlang
 
 ;;; Code:
 
@@ -68,7 +69,8 @@
 
 (defconst org-babel-header-args:gleam
   '((deps . :any)
-    (imports . :any))
+    (imports . :any)
+    (target . :any))
   "Gleam-specific header arguments.")
 
 (defun ob-gleam--split-arg (arg)
@@ -76,6 +78,18 @@
 Return nil if ARG is nil or empty."
   (when (and arg (not (string-empty-p (string-trim arg))))
     (split-string (string-trim arg))))
+
+(defun ob-gleam--validate-target (target)
+  "Validate and normalize TARGET string.
+Return nil for default (Erlang) target, \"javascript\" for JS target.
+Signal `user-error' for invalid values."
+  (let ((val (and target
+                  (not (string-empty-p (string-trim target)))
+                  (downcase (string-trim target)))))
+    (cond
+     ((or (null val) (string= val "erlang")) nil)
+     ((string= val "javascript") "javascript")
+     (t (user-error "Invalid target `%s'; must be `erlang' or `javascript'" val)))))
 
 (defun ob-gleam--has-main-p (body)
   "Return non-nil if BODY includes a `pub fn main()' definition."
@@ -95,17 +109,19 @@ BODY in `pub fn main() { ... }'."
             body
             "\n}\n")))
 
-(defun ob-gleam--generate-gleam-toml (project-name)
-  "Generate gleam.toml content with PROJECT-NAME."
-  (format "name = \"%s\"\nversion = \"1.0.0\"\n\n[dependencies]\ngleam_stdlib = \">= 0.18.0\"\n"
-          project-name))
+(defun ob-gleam--generate-gleam-toml (project-name target)
+  "Generate gleam.toml content with PROJECT-NAME and TARGET."
+  (concat (format "name = \"%s\"\nversion = \"1.0.0\"\n" project-name)
+          (when (equal target "javascript")
+            "target = \"javascript\"\n\n[javascript]\nruntime = \"node\"\n")
+          "\n[dependencies]\ngleam_stdlib = \">= 0.18.0\"\n"))
 
-(defun ob-gleam--create-project (dir project-name)
-  "Create a minimal Gleam project structure in DIR with PROJECT-NAME."
+(defun ob-gleam--create-project (dir project-name target)
+  "Create a minimal Gleam project structure in DIR with PROJECT-NAME and TARGET."
   (let ((src-dir (expand-file-name "src" dir)))
     (make-directory src-dir t)
     (with-temp-file (expand-file-name "gleam.toml" dir)
-      (insert (ob-gleam--generate-gleam-toml project-name)))))
+      (insert (ob-gleam--generate-gleam-toml project-name target)))))
 
 (defun ob-gleam--write-source (dir project-name code)
   "Write CODE to src/PROJECT-NAME.gleam in DIR."
@@ -138,7 +154,8 @@ BODY in `pub fn main() { ... }'."
 
 (defun org-babel-execute:gleam (body params)
   "Execute a Gleam code block BODY with PARAMS."
-  (let* ((deps (ob-gleam--split-arg (cdr (assq :deps params))))
+  (let* ((target (ob-gleam--validate-target (cdr (assq :target params))))
+         (deps (ob-gleam--split-arg (cdr (assq :deps params))))
          (imports (ob-gleam--split-arg (cdr (assq :imports params))))
          (has-main (ob-gleam--has-main-p body))
          (code (if (and ob-gleam-auto-main (not has-main))
@@ -147,7 +164,7 @@ BODY in `pub fn main() { ... }'."
          (tmp-dir (make-temp-file "ob-gleam-" t)))
     (unwind-protect
         (progn
-          (ob-gleam--create-project tmp-dir ob-gleam-project-name)
+          (ob-gleam--create-project tmp-dir ob-gleam-project-name target)
           (ob-gleam--write-source tmp-dir ob-gleam-project-name code)
           (when deps
             (ob-gleam--add-deps tmp-dir deps))

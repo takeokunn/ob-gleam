@@ -9,6 +9,7 @@ Org Babel support for evaluating Gleam code blocks.
 
 - Emacs 29.1+
 - [[https://gleam.run/][Gleam]] CLI (must be installed and available on =PATH=)
+- [[https://nodejs.org/][Node.js]] (required when using =:target javascript=)
 
 * Installation
 
@@ -45,11 +46,12 @@ See the [[file:example/][example/]] directory for working Org files demonstratin
 
 * Supported header arguments
 
-| Argument   | Description                                     | Default  |
-|------------+-------------------------------------------------+----------|
-| =:results= | Result type (=output=, =silent=)                | =output= |
-| =:deps=    | Space-separated Hex package names to install     |          |
-| =:imports= | Space-separated module paths to auto-import      |          |
+| Argument   | Description                                     | Default    |
+|------------+-------------------------------------------------+------------|
+| =:results= | Result type (=output=, =silent=)                | =output=   |
+| =:deps=    | Space-separated Hex package names to install     |            |
+| =:imports= | Space-separated module paths to auto-import      |            |
+| =:target=  | Compilation target (=erlang=, =javascript=)      | =erlang=   |
 
 * Customization
 
