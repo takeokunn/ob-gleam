@@ -1,7 +1,8 @@
 #+title: ob-gleam
 
-[[https://melpa.org/#/ob-gleam][file:https://melpa.org/packages/ob-gleam-badge.svg]]
 [[https://github.com/takeokunn/ob-gleam/actions/workflows/ci.yml][file:https://github.com/takeokunn/ob-gleam/actions/workflows/ci.yml/badge.svg]]
+
+*⚠ WIP: MELPA submission is pending review. Please install manually for now.*
 
 Org Babel support for evaluating Gleam code blocks.
 
@@ -13,7 +14,9 @@ Org Babel support for evaluating Gleam code blocks.
 
 * Installation
 
-** MELPA
+** MELPA (WIP)
+
+MELPA submission is currently under review. Once accepted, you can install via:
 
 #+begin_src emacs-lisp
 (use-package ob-gleam)
